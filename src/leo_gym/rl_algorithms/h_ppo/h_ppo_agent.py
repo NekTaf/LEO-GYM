@@ -169,7 +169,13 @@ class Agent:
         logp_cont = T.squeeze(logp_cont).detach().cpu().numpy()
 
         action_cont = T.squeeze(action_cont).detach().cpu().numpy()
-
+        
+        assert not np.isnan(action_dis).any(), f"action_dis contains NaN:\n{action_dis}"
+        assert not np.isnan(action_cont).any(), f"action_cont contains NaN:\n{action_cont}"
+        assert not np.isnan(logp_dis).any(), f"logp_dis contains NaN:\n{logp_dis}"
+        assert not np.isnan(logp_cont).any(), f"logp_cont contains NaN:\n{logp_cont}"
+        assert not np.isnan(value).any(), f"value contains NaN:\n{value}"
+        
         return action_dis, action_cont, logp_dis, logp_cont, value
 
 
@@ -456,7 +462,11 @@ class Agent:
                     
                 with tqdm(total=self.ppo_cfg.max_training_timesteps, desc="Training Progress") as pbar:
                     while self.timesteps_so_far <= self.ppo_cfg.max_training_timesteps:
-
+                        
+                        assert not np.isnan(state).any(), (
+                                                    f"state contains NaN:\n"
+                                                    f"{state[np.isnan(state).any(axis=1)][0]}")                        
+                        
                         action_dis, action_cont, prob_dis, prob_cont, val = self.choose_action(state)
                         
                         action = {"discrete": action_dis,
@@ -465,7 +475,13 @@ class Agent:
                         # Environment step
                         next_state, reward, terminated, truncated, info = env.step(action)
                         sojourn_t = info["sojourn_t"]
-
+                        
+                        assert not np.isnan(next_state).any(), (
+                            f"next_state contains NaN:\n"
+                            f"{next_state[np.isnan(next_state).any(axis=1)][0]}"
+                        )
+                        assert not np.isnan(reward).any(), "reward contains NaN"        
+                                        
                         # Process done/truncated flags and Save to buffer
                         self.rollout_buffer(
                             state,
