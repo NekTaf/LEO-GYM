@@ -1,17 +1,24 @@
 # Standard library
+import sys 
+import os
+import json
+import zipfile
+import tempfile
 from typing import Any, Optional, Tuple
 from dataclasses import asdict
+from textwrap import dedent
+from pathlib import Path
 
 # Third-party
 import gymnasium as gym
 import numpy as np
+from numpy.typing import NDArray
 import torch as T
 import torch.nn as nn
 import mlflow
-import os
-from numpy.typing import NDArray
-
 from tqdm import tqdm
+from pydantic import BaseModel
+
 # Local
 from leo_gym.rl_algorithms.h_ppo.actor_critic_nets import (
     PolicyNetwork,
@@ -24,9 +31,6 @@ from leo_gym.rl_algorithms.h_ppo.losses import (
     ActorLoss,
     CriticLoss,
 )
-from textwrap import dedent
-from pydantic import BaseModel
-from pathlib import Path
 
 class Agent:
 
@@ -34,21 +38,28 @@ class Agent:
         self, 
         env_obs, 
         env_actions, 
-        #  env_cfg,
-        ppo_cfg: PPOConfig | str | Path,
-        policy_file_path:str|Path|None=None,
-        critic_file_path:str|Path|None=None,
+        ppo_cfg: PPOConfig|str|Path|None= None,
         train:bool=False,
+        models_path:str|Path|None=None,
         device:str|None = None,
-        ):
+    ):
+        self.device = device
         
-        self.load_cfg(ppo_cfg)        
         
-        if device is not None:
-            self.device = device
-        else:
-            self.device = T.device(self.ppo_cfg.device)
+        checkpoint = None
+        if models_path is not None:
+            checkpoint = T.load(
+                models_path,
+                map_location=device,
+                weights_only=False,
+            )
 
+            self.ppo_cfg = checkpoint["ppo_cfg"]
+            self.lr = checkpoint["lr"]
+
+        else:
+            self.load_cfg(ppo_cfg)            
+                    
         # Whether to normalize advantage 
         self.normalize_advantage = getattr(self.ppo_cfg, "normalize_advantage", False)
 
@@ -105,12 +116,9 @@ class Agent:
             }
         )
         
-        self.load_trained_networks(
-            train=train,
-            policy_file_path=policy_file_path,
-            critic_file_path=critic_file_path
-        )
-
+        if checkpoint is not None:
+            self.load_agent(checkpoint, train)
+                
         # Rollout Buffer
         self.buffer = TrajectoryBuffer(batch_size=self.ppo_cfg.batch_size)
 
@@ -128,10 +136,11 @@ class Agent:
         self.loss_components = [self.actor_loss_fn, self.value_loss_fn]
 
 
-    def choose_action(self, 
-                      state: Any,
-                      deterministic:Optional[bool]=False
-                      )-> Tuple[NDArray,NDArray,NDArray,NDArray,NDArray]:
+    def choose_action(
+        self, 
+        state: Any,
+        deterministic:Optional[bool]=False
+    )-> Tuple[NDArray,NDArray,NDArray,NDArray,NDArray]:
         """
         Get discrete and continuous action with probabilities and value function output 
         
@@ -191,14 +200,15 @@ class Agent:
         self.buffer.push(step_data)
 
 
-    def GAE_fun(self,
-                reward_arr,
-                vals_arr,
-                dones_arr,
-                t_soujourn_arr,        
-                gae_lambda=None,
-                gamma=None
-                )->T.Tensor:
+    def GAE_fun(
+        self,
+        reward_arr,
+        vals_arr,
+        dones_arr,
+        t_soujourn_arr,        
+        gae_lambda=None,
+        gamma=None
+    )->T.Tensor:
 
         # Custom gamma-unused
         if gae_lambda is None:
@@ -235,10 +245,11 @@ class Agent:
         return T.tensor(advantage).to(self.device)
 
 
-    def update(self, 
-              timesteps_so_far:int, 
-              total_timesteps:int
-              )->None:
+    def update(
+        self, 
+        timesteps_so_far:int, 
+        total_timesteps:int
+    )->None:
         """
         Single PPO update: generate batches, compute losses, update networks.
         """
@@ -333,7 +344,7 @@ class Agent:
                 # Zero optimizers
                 self.policy_net.optimizer.zero_grad()
                 self.value_net.optimizer.zero_grad()
-          
+
                 total_loss.backward()
 
                 # Gradient clipping
@@ -366,8 +377,6 @@ class Agent:
             self.logger.log_scalar("train/approx_kl cont", float(np.mean(plot_kl_cont)), timesteps_so_far)
             self.logger.log_scalar("train/entropy_coef", float(T.exp(self.log_ent_coef).item()), timesteps_so_far)
 
-
-
         self.buffer.clear()
 
         return
@@ -377,13 +386,12 @@ class Agent:
         self.policy_net.save_checkpoint(directory_save)
         self.value_net.save_checkpoint(directory_save)
 
-
     def load_trained_networks(
         self, 
         train:bool=False,
         policy_file_path:str|Path|None=None,
         critic_file_path:str|Path|None=None,
-        )->None:
+    )->None:
         
 
         if policy_file_path is not None:
@@ -401,14 +409,12 @@ class Agent:
         
         try:
             self.lr = ppo_cfg.lr
-            # self.env_cfg = env_cfg
             self.ppo_cfg = ppo_cfg
         except AttributeError:
             self.ppo_cfg = PPOConfig.load_cfg_params_from_file(cfg_file_path=ppo_cfg)
 
         return 
         
-                    
         
     def train(self,env:gym.Env, training_cfg:TrainingConfig, env_cfg:BaseModel)->None:
         
@@ -510,13 +516,11 @@ class Agent:
                                 "artifacts/models",
                                 f"{self.timesteps_so_far}"
                             )
-                            
+                            self.save_agent(directory_save)
                             os.makedirs(directory_save, exist_ok=True)
-                            self.save_models(directory_save=directory_save)
                             
                             
         except KeyboardInterrupt:
-            # allow graceful interrupt, don't swallow other exceptions
             pass
         
         # Save final models 
@@ -536,6 +540,84 @@ class Agent:
             )
         
         os.makedirs(directory_save, exist_ok=True)
-        self.save_models(directory_save=directory_save)
+        # self.save_models(directory_save=directory_save)
+        self.save_agent(directory_save)
+        
 
+    def save_agent(self, save_dir):
+        save_dir = Path(save_dir)
+        save_dir.mkdir(parents=True, exist_ok=True)
 
+        T.save(
+            {
+                # Config
+                "ppo_cfg": self.ppo_cfg,
+
+                # Networks
+                "policy_state_dict": self.policy_net.state_dict(),
+                "critic_state_dict": self.value_net.state_dict(),
+
+                # Optimizers
+                "policy_optimizer": self.policy_net.optimizer.state_dict(),
+                "critic_optimizer": self.value_net.optimizer.state_dict(),
+
+                # Training state
+                "lr": self.lr,
+                "log_ent_coef": self.log_ent_coef.detach().cpu(),
+                "timesteps_so_far": getattr(
+                    self, "timesteps_so_far", 0
+                ),
+                "global_episode_count": getattr(
+                    self, "global_episode_count", 0
+                ),
+            },
+            save_dir / "h_ppo_model.pth",
+        )
+
+    def load_agent(self, checkpoint, train):
+
+        self.policy_net.load_state_dict(
+            checkpoint["policy_state_dict"]
+        )
+
+        self.value_net.load_state_dict(
+            checkpoint["critic_state_dict"]
+        )
+        
+        if train:
+            self.policy_net.train()
+            self.value_net.train()
+        else:
+            self.policy_net.eval()
+            self.value_net.eval()
+
+        self.policy_net.optimizer.load_state_dict(
+            checkpoint["policy_optimizer"]
+        )
+
+        self.value_net.optimizer.load_state_dict(
+            checkpoint["critic_optimizer"]
+        )
+
+        self.log_ent_coef.data = checkpoint[
+            "log_ent_coef"
+        ].to(self.device)
+
+        self.lr = checkpoint["lr"]
+
+        self.timesteps_so_far = checkpoint.get(
+            "timesteps_so_far",
+            0,
+        )
+
+        self.global_episode_count = checkpoint.get(
+            "global_episode_count",
+            0,
+        )
+
+        for g in self.policy_net.optimizer.param_groups:
+            g["lr"] = self.lr
+
+        for g in self.value_net.optimizer.param_groups:
+            g["lr"] = self.lr        
+    

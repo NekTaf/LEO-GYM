@@ -73,36 +73,3 @@ class SquashedNormal(TransformedDistribution):
         return base_ent - correction
     
     
-def save_checkpoint(model,
-                    directory_save:str,
-                    )->None:
-    checkpoint_file = os.path.join(directory_save, model.name + '.pth')
-    T.save(model.state_dict(), checkpoint_file)
-    
-    return
-
-def load_checkpoint(model, 
-                    file_name:str, 
-                    train:bool=False,
-                    device:T.device=T.device('cpu'),
-                    )->None:
-    
-    
-    state_dict = T.load(file_name, map_location=device)
-    model.load_state_dict(state_dict)
-    model.to(device)
-    
-    if train:
-        model.train()
-    else:
-        model.eval()
-
-    return
-
-
-
-def proc_env_states(states):
-    
-    
-    return states 
-

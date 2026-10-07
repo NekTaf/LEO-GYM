@@ -9,27 +9,28 @@ from torch_geometric.nn.aggr.deep_sets import DeepSetsAggregation
 # Local
 from leo_gym.rl_algorithms.utils.utils import (
     SquashedNormal,
-    load_checkpoint,
-    save_checkpoint,
 )
 
 class ObservationEncoder(nn.Module):
-    def __init__(self,
-                 obs_dim: int,
-                 net_arch=[64, 64, nn.Tanh],  # last element can be activation class
-                 device: str = "cpu"):
+    def __init__(
+        self,
+        obs_dim: int,
+        net_arch=[64, 64, nn.Tanh],  # last element can be activation class
+        device: str = "cuda",
+    ):
         """
         net_arch:
             - e.g. (64, 64, nn.Tanh) or (64, 64, nn.ReLU)
             - or just (64, 64) -> defaults to Tanh
-            - or a single int 64 -> [64] with Tanh
+            - or a single int 64 -> 64 with Tanh
         """
+        
         super().__init__()
         self.device = T.device(device)
         
         activation_cls = net_arch[-1]          
-        hidden_sizes = net_arch[:-1]       
-
+        hidden_sizes = net_arch[:-1]     
+        
         layers = []
         in_dim = obs_dim
         gain = nn.init.calculate_gain('tanh')  # assuming Tanh-like scale
@@ -45,7 +46,7 @@ class ObservationEncoder(nn.Module):
         self.net = nn.Sequential(*layers).to(self.device)
         self.output_dim = in_dim  # last hidden layer size
 
-    def forward(self, obs):
+    def forward(self, obs):            
         if not isinstance(obs, T.Tensor):
             obs = T.as_tensor(obs, dtype=T.float32)
         if obs.dim() == 1:
@@ -56,19 +57,18 @@ class ObservationEncoder(nn.Module):
 
 # Policy 
 class PolicyNetwork(nn.Module):
-    save_checkpoint = save_checkpoint
-    load_checkpoint = load_checkpoint
-
-    def __init__(self,
-                 state_dim,
-                 lr,
-                 action_type,          # assume always hybrid: [("continuous", cdim), ("discrete", ddim)]
-                 device,
-                 continuous_dist_cls,  # e.g. SquashedNormal, ctor taking (mu, std)
-                 std_0,
-                 observation_encoder,
-                 net_arch=[64, 64, nn.Tanh],
-                 name='policynet'):
+    def __init__(
+        self,
+        state_dim,
+        lr,
+        action_type,          # assume always hybrid: [("continuous", dim), ("discrete", dim)]
+        device,
+        continuous_dist_cls,  # e.g. SquashedNormal, actor taking (mu, std)
+        std_0,
+        observation_encoder,
+        net_arch=[64, 64, nn.Tanh],
+        name='policynet'
+    ):
         super().__init__()
         self.device = device
         self.action_type = action_type
@@ -136,16 +136,15 @@ class PolicyNetwork(nn.Module):
 
 
 class ValueNetwork(nn.Module):
-    save_checkpoint = save_checkpoint
-    load_checkpoint = load_checkpoint
-
-    def __init__(self,
-                 state_dim,
-                 lr,
-                 device,
-                 observation_encoder,
-                 net_arch=[64, 64, nn.Tanh],
-                 name='valuenet'):
+    def __init__(
+        self,
+        state_dim,
+        lr,
+        device,
+        observation_encoder,
+        net_arch=[64, 64, nn.Tanh],
+        name='valuenet'
+    ):
         super().__init__()
 
         self.device = device
