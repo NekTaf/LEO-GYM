@@ -1,27 +1,30 @@
-""" Satellite class used for Relative Orbital Element (ROE) control.
+r"""
+Satellite class used for Relative Orbital Element (ROE) control.
 
 The Relative Orbital Elements (ROE) are nonlinear combinations of classical orbital elements.
 They are constructed from differences in semi-major axis (a), inclination (i), 
-and trigonometric components of eccentricity (e), argument of perigee (ω), and RAAN (☊). \b
+and trigonometric components of eccentricity (e), argument of perigee (ω), and RAAN (☊).
 
-The relative motion is expressed in a linear, nonsingular, and geometrically intuitive form. \b    
+The relative motion is expressed in a linear, nonsingular, and geometrically intuitive form.
 
 Nonsingular elements remain valid and continuous for all orbit shapes 
 and orientations, avoiding undefined angles at circular or equatorial conditions
 
-oe_ns = ["SMA (a) m", 
-        "AOML (u) rad", 
-        "EX (e_x)-", 
-        "EY (e_y)-", 
-        "INC (i) rad", 
-        "RAAN (☊) rad"]\b
+::
 
-roe = ["a \delta a m", 
-        "a \delta \lambda m", 
-        "a \delta ex m", 
-        "a \delta ey m", 
-        "a \delta ix m",
-        "a \delta iy m"]\b
+    oe_ns = ["SMA (a) m", 
+             "AOML (u) rad", 
+             "EX (e_x)-", 
+             "EY (e_y)-", 
+             "INC (i) rad", 
+             "RAAN (☊) rad"]
+
+    roe = ["a \delta a m", 
+           "a \delta \lambda m", 
+           "a \delta ex m", 
+           "a \delta ey m", 
+           "a \delta ix m",
+           "a \delta iy m"]
 """
 
 
@@ -125,15 +128,17 @@ class Satellite():
                  pv_sat:NDArray,
                  pv_ref:NDArray
                  )->Tuple[NDArray, NDArray, NDArray]:
-        """Convert Cartesian state vectors into relative orbital elements (ROE)
+        """
+        Convert Cartesian state vectors into relative orbital elements (ROE)
         and non-singular orbital elements for both deputy and chief.
         
-        Args:
-            pv_sat (NDArray): _description_
-            pv_ref (NDArray): _description_
+        :param pv_sat: Deputy satellite position and velocity in ECI with shape (6,)
+        :type pv_sat: NDArray
+        :param pv_ref: Chief (reference) position and velocity in ECI with shape (6,)
+        :type pv_ref: NDArray
 
-        Returns:
-            Tuple[NDArray, NDArray, NDArray]: _description_
+        :return: ROE, deputy and chief non-singular orbital elements
+        :rtype: Tuple[NDArray, NDArray, NDArray]
         """
         return rv_to_roe_and_nsoe(pv_sat, pv_ref)
      
@@ -141,8 +146,10 @@ class Satellite():
                               Droe:NDArray
                               )->None:  
         """
-        d_kep = [0, 0, 0, 0, 1.2, 0] 
-        [d_sma, d_ecc, d_inc, d_ran, d_aop, d_tan]
+        Set the initial satellite state as a ROE displacement from the reference trajectory.
+
+        :param Droe: Displacement in ROE [da,dl,dex,dey,dix,diy] with shape (6,)
+        :type Droe: NDArray
         """
         
         rv_ref = self.rvm_eci_ref[self.discrete_time_index_simulation,:6]
@@ -162,21 +169,23 @@ class Satellite():
                       flag_man_type:str
                       )->None:
         
-        """Apply manuever plan
+        """
+        Apply manuever plan
         
-        Maneuver includes: \b
-        + Thrust direction -- RTN \b
-        + Thrust delay -- t_delay \b
-        + Thrust duration -- t_duration \b
-        + Coasting time after applied thrust -- t_coast \b
-        
-        Args:
-            manplan (NDArray): maneuver plan 
-            flag_man_type (str): Along (tangential) or Across (normal) track corrections 
+        Maneuver includes:
 
-        Returns:
-            int: elapsed time in from the start of maneuver to end 
-            
+        - Thrust direction -- RTN
+        - Thrust delay -- t_delay
+        - Thrust duration -- t_duration
+        - Coasting time after applied thrust -- t_coast
+        
+        :param manplan: maneuver plan
+        :type manplan: NDArray
+        :param flag_man_type: Along (tangential) or Across (normal) track corrections
+        :type flag_man_type: str
+
+        :return: elapsed steps if the trajectory data runs out, otherwise None
+        :rtype: Optional[int]
         """
         self.manplans.append(manplan.tolist() + \
             [flag_man_type,self.discrete_time_index_simulation*self.cfg.dt+self.cfg.pert_traj_params.eph_time_0])
@@ -366,8 +375,11 @@ class Satellite():
                     path:str
                     )->None:
         
-        """collect all important data of object and save in csv files
-        
+        """
+        Collect all important data of object and save in csv files
+
+        :param path: Output directory for the csv files
+        :type path: str
         """
         
         rvm_cols    = ['$r_x$','$r_y$', '$r_z$', '$v_x$','$v_y$', '$v_z$', '$m$']

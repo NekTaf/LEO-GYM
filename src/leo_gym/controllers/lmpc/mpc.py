@@ -37,11 +37,10 @@ def cw_state_matrix(n):
         [  0      0      0    -2n      0      0  ]
         [  0      0   -n^2      0      0      0  ]
     
-    Parameters:
-        n (float): Mean motion of the reference orbit.
-    
-    Returns:
-        np.ndarray: 6x6 state-space matrix for the CW equations.
+    :param n: Mean motion of the reference orbit.
+    :type n: float
+    :return: 6x6 state-space matrix for the CW equations.
+    :rtype: np.ndarray
     """
     A = np.array([
         [0,      0,     0,    1,    0,    0],
@@ -81,18 +80,15 @@ class MPC:
     over the time step dt. It also transforms the error state from ECI to RTN using the nominal
     state.
     
-    Parameters:
-        n               : Parameter to build the CW state transition matrix.
-        mass            : Mass value used for the CW input matrix.
-        dt              : Time step for discretization.
-        error_state_eci : The error state vector expressed in the ECI frame.
-        rv_nom          : Nominal state vector (assumed to be 6-dimensional: [pos; vel]).
-        N_c             : Prediction horizon (number of discrete time steps).
-        Q               : State cost matrix.
-        Qf              : Terminal state cost matrix.
-        R               : Control cost matrix.
-        u_max           : Maximum absolute value allowed for each control input element.
-        x0              : (Optional) Initial state vector. If not provided, it is computed from the error state.
+    :param n: Parameter to build the CW state transition matrix.
+    :param mass: Mass value used for the CW input matrix.
+    :param dt: Time step for discretization.
+    :param N_c: Prediction horizon (number of discrete time steps).
+    :param Q: State cost matrix.
+    :param Qf: Terminal state cost matrix.
+    :param R: Control cost matrix.
+    :param u_max: Maximum absolute value allowed for each control input element.
+    :param dynamics: Dynamics model used to compute the perturbation forces.
     """
     def __init__(self, n, mass, dt, N_c, Q, Qf, R, u_max,dynamics):
         self.n = n

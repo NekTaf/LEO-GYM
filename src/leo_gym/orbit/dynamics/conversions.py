@@ -203,8 +203,23 @@ def calculate_ecc_anomaly(
     ecc:float,
     tol:float=1e-10,
     maxIter:int=20
-):
-    
+)->NDArray:
+    """
+    Compute the eccentric anomaly from the mean anomaly by solving
+    Kepler's equation using Newton-Raphson iteration.
+
+    :param M: Mean anomaly [rad].
+    :type M: float
+    :param ecc: Orbital eccentricity.
+    :type ecc: float
+    :param tol: Convergence tolerance for the Newton-Raphson iteration.
+    :type tol: float
+    :param maxIter: Maximum number of Newton-Raphson iterations.
+    :type maxIter: int
+    :return: Eccentric anomaly [rad].
+    :rtype: arr
+    """   
+
     M = np.mod(M, 2 * np.pi)
     E = np.where(M > np.pi, M - ecc, M + ecc)
     for iter_count in range(maxIter):
@@ -222,6 +237,20 @@ def calculate_true_anomaly(
     tol:float=1e-10,
     maxIter:int=20
 )-> float:
+    """
+    Compute the true anomaly from the mean anomaly for an elliptical orbit.
+
+    :param M: Mean anomaly [rad].
+    :type M: float
+    :param ecc: Orbital eccentricity.
+    :type ecc: float
+    :param tol: Convergence tolerance for the Newton-Raphson iteration.
+    :type tol: float
+    :param maxIter: Maximum number of Newton-Raphson iterations.
+    :type maxIter: int
+    :return: True anomaly [rad].
+    :rtype: float
+    """
     
     E = calculate_ecc_anomaly(M, ecc, tol, maxIter)
     TA = np.mod(2 * np.arctan(np.tan(E / 2) * np.sqrt((1 + ecc) / (1 - ecc))), 2 * np.pi)
@@ -237,10 +266,10 @@ def osc_2_mean_non_singular_oe_brouwer_lyddane_method(
     Convert osculating non-singular orbital elements to mean non-singular orbital elements 
     using the Brouwer–Lyddane analytical method.
 
-    :param oe: Osculating non-singular orbital elements (a, e_x, e_y, i, \Omega, u, \lambda) (arr of shape (7, N))
+    :param oe: Osculating non-singular orbital elements (a, e_x, e_y, i, Ω, u, λ) (arr of shape (7, N))
     :param r_E: Equatorial radius of the central body [m] (float)
     :param j2: Second zonal harmonic coefficient of the gravitational potential (float)
-    :return: Mean non-singular orbital elements (a, e_x, e_y, i, \Omega, u, \lambda) (arr of shape (7, N))
+    :return: Mean non-singular orbital elements (a, e_x, e_y, i, Ω, u, λ) (arr of shape (7, N))
     """
     
     a = oe[0, :]
@@ -318,7 +347,7 @@ def osc_2_mean_non_singular_oe_brouwer_lyddane_method(
 def damico_relative_elements(
     oe_r:NDArray,
     oe:NDArray
-    )->NDArray:
+)->NDArray:
 
     doe = np.zeros_like(oe)
     doe[0, :] = (oe[0, :] - oe_r[0, :]) / (oe_r[0, :] + 1)
@@ -366,7 +395,7 @@ def nonsingular_to_classical_oe(
         nu,
     )
 
-       
+
 def dcm_eci_2_pf(
     inc:float, 
     raan:float, 
@@ -379,8 +408,7 @@ def dcm_eci_2_pf(
     :param raan: Right Ascension of the Ascending Node (float)
     :param aop: Argument of Periapsis (float)
     
-    :returns: Direction Cosine Matrix ECI->PF (arr (3,3))
-    
+    :return: Direction Cosine Matrix ECI->PF (arr (3,3))
     """
     
     dcm = np.zeros((3, 3))
@@ -404,12 +432,13 @@ def rv_2_kepler_oe_pyorb(
     mu:float=3.986004415000000e+14, 
     degrees:bool=False
 )->NDArray:
-    """Cartesian to orbital elelment wrapper
+    """
+    Cartesian to orbital elelment wrapper
     
     :param rv: ECI position and velocity vector (6,)
     :param mu: Gravitational parameter, defaults to Earth's μ if not provided
     :param degrees: If True, output angles are in degrees; if False, in radians
-    :return: Orbital elements (6,) → [a, e, i, \omega, \Omega, \nu]
+    :return: Orbital elements (6,) → [a, e, i, ω, Ω, ν]
     """
     
     kep = pyorb.cart_to_kep(rv, 
@@ -426,7 +455,7 @@ def kepler_oe_2_rv_pyorb(
     r"""
     Orbital element to Cartesian wrapper.
 
-    :param oe: Classical Keplerian orbital elements — (a, e, i, \omega, \Omega, \nu) (arr of shape (6,))
+    :param oe_kep: Classical Keplerian orbital elements — (a, e, i, \omega, \Omega, \nu) (arr of shape (6,))
     :param mu: Gravitational parameter, defaults to Earth's \mu if not provided (float, optional)
     :param degrees: If True, input angles are in degrees; if False, in radians (bool)
     :return: Cartesian state vector in the ECI frame (arr of shape (6,))
@@ -518,8 +547,8 @@ def delta_r_eci_2_rb(
     Compute the relative difference between a debris object and the primary satellite,
     transforming from ECI coordinates to the B-plane ({xi, eta, zeta}).
 
-    :param sat_rv: Primary satellite ECI position and velocity (arr of shape (6,))
-    :param deb_rv: Secondary debris ECI position and velocity (arr of shape (6,))
+    :param rv_p: Primary satellite ECI position and velocity (arr of shape (6,))
+    :param rv_s: Secondary debris ECI position and velocity (arr of shape (6,))
     :return: Relative separation in the B-plane frame (arr of shape (3,))
     """
     
@@ -580,7 +609,8 @@ def Delta_roe_to_rv(
     and nominal trajectory  
     
     :param Droe: (arr (6,)) Displacement in ROE [da,dl,dex,dey,dix,diy]
-    :param rv_ref: (arr (6,)) Postion velocity vector 
+    :param rv_ref: (arr (6,)) Postion velocity vector
+    :return: (arr (6,)) Position velocity vector of the displaced trajectory point
     """
     
     rv_ref = np.asarray(rv_ref).reshape(-1)   # shape (6,)

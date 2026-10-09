@@ -19,7 +19,7 @@ class ObservationEncoder(nn.Module):
         :param obs_deb_size: Debris observation states
         :type obs_deb_size: int
         :param net_arch: network architecture number of layers with neuron size and activation function
-        :type obs_deb_size: list
+        :type net_arch: list
         """
         super().__init__()    
             

@@ -1,16 +1,17 @@
-""" Gymnasium Environment for training RL policy to conduct Along Track (ALT)
-and Across Track (ACT) maneuvers. \b
-
+r"""
+Gymnasium Environment for training RL policy to conduct Along Track (ALT)
+and Across Track (ACT) maneuvers.
 
 ACT:
-+ controls relative inclination $a\delta \mathbf{i}$ \b
-+ uses Normal maneuvers \b
+
+- controls relative inclination :math:`a\delta \mathbf{i}`
+- uses Normal maneuvers
 
 ALT:
-+ controls relative SMA ($a\delta a$) \b
-+ relative eccentricity vector $a\delta\mathbf{e}$ \b
-+ relative argument of longitude $a\delta\lambda$ \b
 
+- controls relative SMA (:math:`a\delta a`)
+- relative eccentricity vector :math:`a\delta\mathbf{e}`
+- relative argument of longitude :math:`a\delta\lambda`
 """
 
 # Standard library
@@ -116,10 +117,14 @@ class RoeGym(gym.Env):
 
     def _reward_fun_act(self
                         )->tuple[float,bool]:
-        """Reward function for ACT
-        Returns reward and termination: \b
-        + Success: target boundary reached \b
-        + Failure: target boundary violated \b
+        """
+        Reward function for ACT
+
+        :return: Reward and termination flag
+
+            - Success: target boundary reached
+            - Failure: target boundary violated
+        :rtype: tuple[float, bool]
         """
         terminated = False
         reward = 0
@@ -145,13 +150,14 @@ class RoeGym(gym.Env):
             
     def process_action(self
                           )->None:
-        """It is good practice to always scale the network output to [-1,+1]
-        This is then min-max rescaled to the appropriate bounds 
-        
+        """
+        It is good practice to always scale the network output to [-1,+1]
+        This is then min-max rescaled to the appropriate bounds
+
         Note different algorithms handle action bounds differently, eg.:
-        + PPO relies on environment level clipping \b
-        + SAC relies on tanh() squashing on algo-network level \b
-    
+
+        - PPO relies on environment level clipping
+        - SAC relies on tanh() squashing on algo-network level
         """
         
         self.action = np.clip(self.action,-1,+1)
@@ -172,9 +178,13 @@ class RoeGym(gym.Env):
     def termination_check_act(self,
                           )-> bool:
         
-        """Check if inclination magnitude surpasses cut-off magnitude.
-        
+        """
+        Check if inclination magnitude surpasses cut-off magnitude.
+
         Useful in speeding up training by not allowing satellite violate
+
+        :return: True if the cut-off magnitude is surpassed
+        :rtype: bool
         """
         
         if np.sqrt(self.sat1.roe[-1][4]**2 + self.sat1.roe[-1][5]**2) >= self.cfg.adi_norm_cutoff:
@@ -186,7 +196,11 @@ class RoeGym(gym.Env):
     def truncation_check(self
                          )-> bool:
         
-        """Limits episode length based on number of days worth of orbit parameter
+        """
+        Limits episode length based on number of days worth of orbit parameter
+
+        :return: True if the episode should be truncated
+        :rtype: bool
         """
         if (self.sat1.discrete_time_index_simulation*self.cfg.dt)/(60*60*24)\
                                     >= self.cfg.satellite_params.days:

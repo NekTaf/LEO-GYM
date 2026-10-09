@@ -43,9 +43,11 @@ class TrajectoryBuffer:
         """
         Convert the stored list-of-dicts into a dict-of-arrays, and produce minibatch indices.
 
-        Returns:
-            all_data: dict mapping each field name → NumPy array of shape (T, *field_shape)
-            batches: a list of NumPy 1D index‐arrays, each of length `batch_size` (except possibly the last).
+        :return: Tuple of
+
+            - all_data: dict mapping each field name → NumPy array of shape ``(T, *field_shape)``
+            - batches: a list of NumPy 1D index‐arrays, each of length ``batch_size`` (except possibly the last).
+        :rtype: Tuple[dict, list]
         """
         if not self.storage:
             raise ValueError("TrajectoryBuffer.generate_batches: buffer is empty")

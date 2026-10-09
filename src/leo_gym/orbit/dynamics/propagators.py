@@ -15,17 +15,22 @@ class PropagatorModels:
             t: float
             )->NDArray[np.float64]:
         
-        """RK4 dynamics propagator
+        """
+        RK4 dynamics propagator
 
-        Args:
-            x (NDArray[np.float64]): current state 
-            u (NDArray[np.float64]): control input
-            dx_dt_dynamics_fun (any): callback dynamics function
-            dt (float): sampling time
-            t (float): current time used in model propagation
+        :param x: current state
+        :type x: NDArray[np.float64]
+        :param u: control input
+        :type u: NDArray[np.float64]
+        :param dx_dt_dynamics_fun: callback dynamics function
+        :type dx_dt_dynamics_fun: any
+        :param dt: sampling time
+        :type dt: float
+        :param t: current time used in model propagation
+        :type t: float
 
-        Returns:
-            NDArray[np.float64]: next timestep state
+        :return: next timestep state
+        :rtype: NDArray[np.float64]
         """
         k1 = dt * dx_dt_dynamics_fun(x, u, t)
         k2 = dt * dx_dt_dynamics_fun(x + 0.5 * k1, u, t)
@@ -43,17 +48,22 @@ class PropagatorModels:
             t: float
             )->NDArray[np.float64]:
         
-        """RK8 dynamics propagator -- Higher accuracy
+        """
+        RK8 dynamics propagator -- Higher accuracy
 
-        Args:
-            x (NDArray[np.float64]): current state 
-            u (NDArray[np.float64]): control input
-            dx_dt_dynamics_fun (any): callback dynamics function
-            dt (float): sampling time
-            t (float): current time used in model propagation
+        :param x: current state
+        :type x: NDArray[np.float64]
+        :param u: control input
+        :type u: NDArray[np.float64]
+        :param dx_dt_dynamics_fun: callback dynamics function
+        :type dx_dt_dynamics_fun: any
+        :param dt: sampling time
+        :type dt: float
+        :param t: current time used in model propagation
+        :type t: float
 
-        Returns:
-            NDArray[np.float64]: next timestep state
+        :return: next timestep state
+        :rtype: NDArray[np.float64]
         """
         
         sqrt21 = 4.58257569495584000680

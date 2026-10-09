@@ -92,6 +92,39 @@ class DynamicsConfig(BaseModel):
 
 class Dynamics():
     
+    """
+    Satellite dynamics model including gravitational, environmental, and
+    thrust perturbations.
+
+    :ivar cfg: Dynamics configuration containing model options, satellite
+        properties, and physical constants.
+    :vartype cfg: DynamicsConfig
+
+    :ivar m: Current satellite mass [kg].
+    :vartype m: float
+
+    :ivar r: Current satellite position vector in the ECI frame [m].
+    :vartype r: NDArray
+
+    :ivar v: Current satellite velocity vector in the ECI frame [m/s].
+    :vartype v: NDArray
+
+    :ivar u: Current thrust command vector [N].
+    :vartype u: NDArray
+
+    :ivar t: Current elapsed simulation time from the initial epoch [s].
+    :vartype t: float
+
+    :ivar rho: Current atmospheric density at the satellite location [kg/m³].
+    :vartype rho: float
+
+    :ivar u_thruster_eci: Thrust vector expressed in the ECI frame [N].
+    :vartype u_thruster_eci: NDArray
+
+    :ivar u_thruster_rtn: Thrust vector expressed in the RTN frame [N].
+    :vartype u_thruster_rtn: NDArray
+    """
+    
     def __init__(
         self, 
         cfg:DynamicsConfig
@@ -114,19 +147,18 @@ class Dynamics():
     # Initalise ephemeris time and weather data 
 
     # Weather data_SPICE
-    def read_space_weather(
-        self, 
-        file:str
-    )->None:
-        
-        with open(file, 'r') as fid:
+    def read_space_weather(self, file: str) -> None:
+        # Allocate fresh arrays
+        self.cfg.Cnm = np.zeros((361, 361), dtype=np.float64)
+        self.cfg.Snm = np.zeros((361, 361), dtype=np.float64)
+
+        with open(file, "r") as fid:
             for n in range(361):
                 for m in range(n + 1):
-                    temp = np.array([float(x) for x in fid.readline().split()])
+                    temp = np.fromstring(fid.readline(), sep=" ")
                     self.cfg.Cnm[n, m] = temp[2]
-                    self.cfg.Snm[n, m] = temp[3]      
-        return
-                            
+                    self.cfg.Snm[n, m] = temp[3]
+                                                
     # Reference Frame TF
     def _DCM_eci2rtn(
         self,
@@ -391,7 +423,11 @@ class Dynamics():
                           self.m) * self.rho * np.linalg.norm(v_rel)**2 * (v_rel / np.linalg.norm(v_rel))
 
     def _pedm(self)->float:
-        """Piece-wise exponential density model
+        """
+        Piece-wise exponential density model
+
+        :return: Atmospheric density at the current satellite altitude [kg/m³].
+        :rtype: float
         """
         
         h = np.linalg.norm(self.r) - self.cfg.R_Earth
@@ -627,14 +663,16 @@ class Dynamics():
         x:NDArray,
         t:float
     )->Tuple[NDArray,NDArray,NDArray,NDArray,NDArray]: 
-        """Get current perturbation forces
+        """
+        Get current perturbation forces
 
-        Args:
-            x (arr 6,): space object position and velocity 
-            t (int): relative elapsed time from starting ephemeris time
+        :param x: space object position and velocity with shape (6,)
+        :type x: NDArray
+        :param t: relative elapsed time from starting ephemeris time
+        :type t: float
 
-        Returns:
-            tuple: gravity, irregular gravity, moon, sun, srp, air drag
+        :return: gravity, moon, sun, srp, air drag
+        :rtype: Tuple[NDArray, NDArray, NDArray, NDArray, NDArray]
         """
         
         self.r = x[:3]
@@ -652,7 +690,14 @@ class Dynamics():
         self, 
         r:NDArray
     )->Tuple[float,float]:
-        """get Sat Lat Lon
+        """
+        Get satellite geocentric latitude and longitude.
+
+        :param r: Position vector in the ECI frame with shape (3,) [m].
+        :type r: NDArray
+
+        :return: Latitude and longitude [rad].
+        :rtype: Tuple[float, float]
         """
         
         E = self._DCM_eci2ecef()

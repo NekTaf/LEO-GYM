@@ -22,11 +22,11 @@ def create_dir(
     """
     Creates a directory named with the parent name, computer's hostname, and the current datetime.
     
-    Args:
-        parent_name (str): The parent name part of the directory to be created.
+    :param parent_name: The parent name part of the directory to be created.
+    :type parent_name: str
     
-    Returns:
-        str: The name of the created directory.
+    :return: The name of the created directory.
+    :rtype: str
     """
     computer_name = socket.gethostname()
     directory_save = f"{parent_name}_{computer_name}_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
@@ -43,9 +43,10 @@ def hypers2txt(
     """
     Writes the items of a dictionary to a text file, each key-value pair on a new line.
     
-    Args:
-        hyper_dict (dict): The dictionary to write to the file.
-        file_path (str): The path to the file where the dictionary should be written.
+    :param hyper_dict: The dictionary to write to the file.
+    :type hyper_dict: dict
+    :param file_path: The path to the file where the dictionary should be written.
+    :type file_path: str
     """
     with open(file_path, "w") as file:
         for key, value in hyper_dict.items():
@@ -61,9 +62,10 @@ def save_params_to_file(
     """
     Saves parameters from an object's attributes to a file.
     
-    Args:
-        params (object): The object containing parameters as attributes.
-        file_name (str): The name of the file to save the parameters to.
+    :param params: The object containing parameters as attributes.
+    :type params: object
+    :param file_name: The name of the file to save the parameters to.
+    :type file_name: str
     """
     with open(file_name, 'w') as file:
         for key, value in params.__dict__.items():
@@ -77,11 +79,11 @@ def yaml2dict(
     """
     Loads a YAML file and returns its contents as a dictionary.
     
-    Args:
-        filename (str): The path to the YAML file.
+    :param filename: The path to the YAML file.
+    :type filename: str
     
-    Returns:
-        dict: The YAML file contents as a dictionary.
+    :return: The YAML file contents as a dictionary.
+    :rtype: dict
     """
     with open(filename, 'r') as file:
         data = yaml.safe_load(file)
@@ -97,9 +99,10 @@ def save_yaml_copy(
     """
     Copies the contents of a YAML file to another file.
     
-    Args:
-        original_file (str): The path to the original YAML file.
-        copy_file (str): The path to the file where the copy should be saved.
+    :param original_file: The path to the original YAML file.
+    :type original_file: str
+    :param copy_file: The path to the file where the copy should be saved.
+    :type copy_file: str
     """
     with open(original_file, 'r') as file:
         content = file.read()
@@ -116,9 +119,10 @@ def write2txt(
     """
     Appends data to a text file.
     
-    Args:
-        text_file (str): The path to the text file.
-        data (str): The data to append to the file.
+    :param text_file: The path to the text file.
+    :type text_file: str
+    :param data: The data to append to the file.
+    :type data: str
     """
     with open(text_file, 'a') as file:
         file.write(data)
@@ -133,9 +137,10 @@ def dict2txt(
     """
     Appends the contents of a dictionary to a text file, formatting each key-value pair.
     
-    Args:
-        text_file (str): The path to the text file.
-        dict_data (dict): The dictionary whose contents are to be written to the file.
+    :param text_file: The path to the text file.
+    :type text_file: str
+    :param dict: The dictionary whose contents are to be written to the file.
+    :type dict: dict
     """
     with open(text_file, 'a') as file:
         for var_name, var_value in dict.items():
@@ -150,8 +155,8 @@ def clear_csv(
     """
     Clears the contents of a CSV file.
     
-    Args:
-        name (str): The path to the CSV file.
+    :param name: The path to the CSV file.
+    :type name: str
     """
     with open(name, 'w', newline='') as csvfile:
         pass
@@ -167,9 +172,10 @@ def append_states_to_csv(
     """
     Appends a list of states to a CSV file.
     
-    Args:
-        file_path (str): The path to the CSV file.
-        states (list): The list of states to append.
+    :param file_path: The path to the CSV file.
+    :type file_path: str
+    :param states: The list of states to append.
+    :type states: list
     """
     with open(file_path, 'a', newline='') as csvfile:
         csv_writer = csv.writer(csvfile)
@@ -204,11 +210,11 @@ def create_unique_folder(
     Creates a unique folder in the current directory. If a folder with the same name already exists,
     a counter is appended to the folder name (e.g., results0, results1, etc.).
     
-    Args:
-        base_foldername (str): The base name of the folder without the counter.
+    :param base_foldername: The base name of the folder without the counter.
+    :type base_foldername: str
     
-    Returns:
-        str: The path of the created folder.
+    :return: The path of the created folder.
+    :rtype: str
     """
     counter = 0
     while True:
@@ -242,9 +248,10 @@ def compress_file(
     """
     Compresses a file using gzip and saves it to a new location.
 
-    Parameters:
-    - source_file_path: The path of the file to compress.
-    - destination_file_path: The path where the compressed file will be saved.
+    :param source_file_path: The path of the file to compress.
+    :type source_file_path: str
+    :param destination_file_path: The path where the compressed file will be saved.
+    :type destination_file_path: str
     """
     with open(source_file_path, 'rb') as f_in:
         with gzip.open(destination_file_path, 'wb') as f_out:
@@ -257,11 +264,14 @@ def seed_all(
     seed: int
 )-> None:
 
-    """Seed for current environment instance, called once per process during async_env training
+    """
+    Seed for current environment instance, called once per process during async_env training
 
     https://stable-baselines3.readthedocs.io/en/master/guide/vec_envs.html
     https://stackoverflow.com/questions/47331235/how-should-openai-environments-gyms-use-env-seed0
 
+    :param seed: Random seed
+    :type seed: int
     """
 
     random.seed(seed)
@@ -282,8 +292,11 @@ def clear_folder(
     folder_path: str
 ) -> None:
     """
-    Remove all files and subdirectories inside `folder_path`,
-    but leave `folder_path` itself intact.
+    Remove all files and subdirectories inside ``folder_path``,
+    but leave ``folder_path`` itself intact.
+
+    :param folder_path: The path of the folder to clear.
+    :type folder_path: str
     """
     if not os.path.isdir(folder_path):
         os.makedirs(folder_path)
@@ -317,19 +330,20 @@ def random_vector_know_norm(
     norm:float
 )->np.ndarray:
     
-    """Find a vector size k, with a know final norm
-    
-    Inputs:
-        k (int): desired vector size 
-        norm (float): desired norm 
+    """
+    Find a vector size k, with a know final norm
 
-    Returns:
-        (NDArray[np.float64]): output array (k,)
-        
-        
     Generates the vector value sfrom a multinomial dirichlet distribution
     
     https://en.wikipedia.org/wiki/Dirichlet_distribution
+
+    :param k: desired vector size
+    :type k: int
+    :param norm: desired norm
+    :type norm: float
+
+    :return: output array (k,)
+    :rtype: np.ndarray
     """
     
     flag_1 = False
@@ -357,19 +371,26 @@ def generate_random_perpendicular_normalized_vector(
 )->np.ndarray:
     
     """
-    :params n: input vector (3,)
-    
-    :returns w: perpendicular vector to input vector n (3,)
-           
+    Generate a random unit vector perpendicular to the input vector.
+
     Reference: 
-    @MISC {2347293,
-        TITLE = {How to find a random unit vector orthogonal to a random unit vector in 3D?},
-        AUTHOR = {Ronald Blaak (https://math.stackexchange.com/users/458842/ronald-blaak)},
-        HOWPUBLISHED = {Mathematics Stack Exchange},
-        NOTE = {URL:https://math.stackexchange.com/q/2347293 (version: 2017-07-05)},
-        EPRINT = {https://math.stackexchange.com/q/2347293},
-        URL = {https://math.stackexchange.com/q/2347293}
-    }
+
+    .. code-block:: bibtex
+
+        @MISC {2347293,
+            TITLE = {How to find a random unit vector orthogonal to a random unit vector in 3D?},
+            AUTHOR = {Ronald Blaak (https://math.stackexchange.com/users/458842/ronald-blaak)},
+            HOWPUBLISHED = {Mathematics Stack Exchange},
+            NOTE = {URL:https://math.stackexchange.com/q/2347293 (version: 2017-07-05)},
+            EPRINT = {https://math.stackexchange.com/q/2347293},
+            URL = {https://math.stackexchange.com/q/2347293}
+        }
+
+    :param n: input vector (3,)
+    :type n: np.ndarray
+
+    :return: perpendicular vector to input vector n (3,)
+    :rtype: np.ndarray
     """
     
     n = n/np.linalg.norm(n)
@@ -388,15 +409,17 @@ def gen_rv0(
     sma:float, 
     GM_Earth:float=3.986004415000000e+14
 )->np.ndarray:
-    """Calculate from the desired semimajor axis length the starting positon 
+    """
+    Calculate from the desired semimajor axis length the starting positon 
     and velocity vectors from a multinomial dirichlet distribution
 
-    Args:
-        a (float): semimajor axis value in meters.
-        GM_Earth (float, optional): Standard gravitational parameter of Earth
+    :param sma: semimajor axis value in meters.
+    :type sma: float
+    :param GM_Earth: Standard gravitational parameter of Earth
+    :type GM_Earth: float
 
-    Returns:
-        NDArray[np.float64]: position and velocity vector in ECI
+    :return: position and velocity vector in ECI
+    :rtype: NDArray[np.float64]
     """
 
     nu = np.sqrt(GM_Earth / sma**3)           # mean motion

@@ -19,8 +19,9 @@ class ObservationEncoder(nn.Module):
         device: str = "cuda",
     ):
         """
-        net_arch:
-            - e.g. (64, 64, nn.Tanh) or (64, 64, nn.ReLU)
+        :param net_arch: network architecture, e.g.
+
+            - (64, 64, nn.Tanh) or (64, 64, nn.ReLU)
             - or just (64, 64) -> defaults to Tanh
             - or a single int 64 -> 64 with Tanh
         """
