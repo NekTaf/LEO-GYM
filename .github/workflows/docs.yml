@@ -26,7 +26,7 @@ jobs:
 
       - run: |
           pip install -e .
-          pip install sphinx furo
+          pip install sphinx furo sphinx-design
           pip install autodoc-pydantic
           
       - run: sphinx-build docs docs/_build/html
