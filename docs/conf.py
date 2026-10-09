@@ -39,7 +39,8 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
     "sphinx.ext.githubpages",
-    "autodoc_pydantic",
+    "sphinxcontrib.autodoc_pydantic",
+    "sphinx_design",
 ]
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -57,9 +58,19 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 #
 html_theme = 'furo'
 
+html_title = "LEO-GYM"
+
 html_theme_options = {
     "sidebar_hide_name": False,
     "navigation_with_keys": True,
+    "light_css_variables": {
+        "color-brand-primary": "#2563c9",
+        "color-brand-content": "#2563c9",
+    },
+    "dark_css_variables": {
+        "color-brand-primary": "#6ea8fe",
+        "color-brand-content": "#6ea8fe",
+    },
 }
 html_logo = "_static/leogymlogi.gif"
 # html_favicon = "_static/favicon.ico"
@@ -80,3 +91,6 @@ autodoc_default_options = {
         "model_extra,model_post_init"
     ),
 }
+
+autodoc_pydantic_model_show_json = False
+autodoc_pydantic_settings_show_json = False

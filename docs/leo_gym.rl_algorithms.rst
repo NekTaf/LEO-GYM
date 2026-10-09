@@ -7,7 +7,6 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
-   leo_gym.rl_algorithms.h_p3o
    leo_gym.rl_algorithms.h_ppo
    leo_gym.rl_algorithms.ppo_sb3_smdp
    leo_gym.rl_algorithms.utils

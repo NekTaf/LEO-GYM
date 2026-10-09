@@ -4,14 +4,6 @@ leo\_gym.satellite package
 Submodules
 ----------
 
-leo\_gym.satellite.sat\_debris\_cluster module
-----------------------------------------------
-
-.. automodule:: leo_gym.satellite.sat_debris_cluster
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 leo\_gym.satellite.satellite\_base module
 -----------------------------------------
 
